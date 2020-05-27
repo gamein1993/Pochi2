@@ -1,5 +1,5 @@
 package com.kiprogram.pochi2.character.monster
 
-interface MonsterIF {
-    val name: String
+enum class Level {
+    LEVEL1
 }

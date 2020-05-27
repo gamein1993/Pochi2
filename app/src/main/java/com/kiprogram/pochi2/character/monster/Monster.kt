@@ -1,4 +1,11 @@
 package com.kiprogram.pochi2.character.monster
 
-class Monster(monsterIF: MonsterIF) {
+import android.content.Context
+import kotlin.reflect.KClass
+
+class Monster(context: Context, onEvolutionListener: OnEvolutionListener, monsterTypeClass: KClass<out MonsterType>? = null) {
+
+    interface OnEvolutionListener {
+        fun onEvolutionListener(monsterType: MonsterType)
+    }
 }

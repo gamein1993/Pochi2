@@ -1,5 +1,15 @@
 package com.kiprogram.pochi2.character.monster
 
-data class Puppy(
-    override val name: String = "puppy"
-) : MonsterIF
+object Puppy: MonsterType() {
+    override val name: String = "子犬"
+    override val rightImageId: Int
+        get() = TODO("Not yet implemented")
+    override val leftImageId: Int
+        get() = TODO("Not yet implemented")
+    override val sizeX: Float
+        get() = TODO("Not yet implemented")
+    override val sizeY: Float
+        get() = TODO("Not yet implemented")
+    override val timeForMonsterToEvolution: Long
+        get() = TODO("Not yet implemented")
+}
