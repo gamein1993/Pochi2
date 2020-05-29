@@ -18,48 +18,55 @@ class Egg(context: Context, iv: ImageView, onBornListener: OnBornListener, eggTy
     private val _sp: KiSharedPreferences = KiSharedPreferences(context)
     private val _iv: ImageView = iv
     private val _onBornListener: OnBornListener = onBornListener
-    private val _status: Status
-    private val _eggType: EggType
-    private val _movingDistance: Int
+    private val _movingDistance: Int = KiUtil.convertDpToPixel(_context, 20F)
+
+    val eggType: EggType
+    var elapsedTime: Long
+        private set
+    var touchCount: Int
+        private set
 
     init {
-        _status = if (eggTypeClass != null) {
+        if (eggTypeClass != null) {
             // タイプ指定がある場合は新規作成
-            Status(eggTypeClass.qualifiedName!!)
+            elapsedTime = 0
+            touchCount = 0
+            eggType = Class.forName(eggTypeClass.qualifiedName!!).kotlin.objectInstance as EggType
         } else {
             // タイプ指定がない場合は保存済みデータを使用
-            _sp.getAny(KiSpKey.EGG_STATUS)!!
+            val status = _sp.getAny<Status>(KiSpKey.EGG_STATUS)!!
+            elapsedTime = status.elapsedTime
+            touchCount = status.touchCount
+            eggType = Class.forName(status!!.eggTypeClassName).kotlin.objectInstance as EggType
         }
-
-        _eggType = Class.forName(_status!!.eggTypeClassName).kotlin.objectInstance as EggType
 
         setImageResource()
         setImageSize()
 
-        _movingDistance = KiUtil.convertDpToPixel(_context, 20F)
+        _iv.setOnClickListener {
+            touchCount += 1
+        }
     }
 
-
-
     fun crack(period: Long) {
-        _status.elapsedTime += period
+        elapsedTime += period
 
         setImageResource()
 
-        if (_status.elapsedTime > _eggType.timeForEggToCrack) {
-            _onBornListener.onBornListener(_eggType.getBornMonster(_status.touchCount))
+        if (elapsedTime > eggType.timeForEggToCrack) {
+            _onBornListener.onBornListener(eggType.getBornMonster(touchCount))
         }
     }
 
     fun save() {
-        _sp.setAny(KiSpKey.EGG_STATUS, _status)
+        val status = Status(
+            eggType::class.qualifiedName!!,
+            elapsedTime,
+            touchCount
+        )
+        _sp.setAny(KiSpKey.EGG_STATUS, status)
         _sp.apply()
     }
-
-    fun isTouched() {
-        _status.touchCount += 1
-    }
-
 
     fun jump() {
         _iv.y -= _movingDistance
@@ -68,38 +75,36 @@ class Egg(context: Context, iv: ImageView, onBornListener: OnBornListener, eggTy
         }, MainActivity.PERIOD)
     }
 
-
     private fun setImageResource() {
-        val rate = _status.elapsedTime.toDouble() / _eggType.timeForEggToCrack.toDouble()
+        val rate = elapsedTime.toDouble() / eggType.timeForEggToCrack.toDouble()
         when {
             rate < 0.25 -> {
-                _iv.setImageResource(_eggType.imageId01)
+                _iv.setImageResource(eggType.imageId01)
             }
             rate < 0.5 -> {
-                _iv.setImageResource(_eggType.imageId02)
+                _iv.setImageResource(eggType.imageId02)
             }
             rate < 0.75 -> {
-                _iv.setImageResource(_eggType.imageId03)
+                _iv.setImageResource(eggType.imageId03)
             }
             else -> {
-                _iv.setImageResource(_eggType.imageId04)
+                _iv.setImageResource(eggType.imageId04)
             }
         }
     }
 
     private fun setImageSize() {
-        val sizeX = KiUtil.convertDpToPixel(_context, _eggType.sizeX)
-        val sizeY = KiUtil.convertDpToPixel(_context, _eggType.sizeY)
+        val sizeX = KiUtil.convertDpToPixel(_context, eggType.sizeX)
+        val sizeY = KiUtil.convertDpToPixel(_context, eggType.sizeY)
         _iv.layoutParams.width = sizeX
         _iv.layoutParams.height = sizeY
     }
 
     data class Status(
-        val eggTypeClassName: String
-    ) {
-        var elapsedTime: Long = 0
-        var touchCount: Int = 0
-    }
+        val eggTypeClassName: String,
+        val elapsedTime: Long,
+        val touchCount: Int
+    )
 
     interface OnBornListener {
         fun onBornListener(monsterTypeClass: KClass<out MonsterType>)

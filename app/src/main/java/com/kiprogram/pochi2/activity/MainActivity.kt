@@ -6,6 +6,7 @@ import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import com.kiprogram.pochi2.R
 import com.kiprogram.pochi2.character.egg.Egg
+import com.kiprogram.pochi2.character.egg.EggType
 import com.kiprogram.pochi2.character.egg.WhiteEgg
 import com.kiprogram.pochi2.character.monster.Monster
 import com.kiprogram.pochi2.character.monster.MonsterType
@@ -15,7 +16,7 @@ import com.kiprogram.pochi2.util.KiUtil
 import java.util.*
 import kotlin.reflect.KClass
 
-class MainActivity : AppCompatActivity(), Egg.OnBornListener, Monster.OnEvolutionListener {
+class MainActivity : AppCompatActivity(), Egg.OnBornListener, Monster.OnEvolveListener, Monster.OnDieListener {
     companion object {
         const val PERIOD: Long = 1000 // 1秒
     }
@@ -39,15 +40,12 @@ class MainActivity : AppCompatActivity(), Egg.OnBornListener, Monster.OnEvolutio
 
         // コンポーネント取得
         _ivCharacter = findViewById(R.id.ivCharacter)
-        _ivCharacter.setOnClickListener {
-            _egg?.isTouched()
-        }
 
-//        if (_sp.getAny<Monster.Status>(KiSpKey.MONSTER_STATUS) != null) {
-//            _monster = Monster(this, this)
-//            _timer.schedule(MonsterTimerTask(_monster!!), 0, PERIOD)
-//            return
-//        }
+        if (_sp.getAny<Monster.Status>(KiSpKey.MONSTER_STATUS) != null) {
+            _monster = Monster(this, _ivCharacter, this)
+            _timer.schedule(MonsterTimerTask(_monster!!), 0, PERIOD)
+            return
+        }
 
         if (_sp.getAny<Egg.Status>(KiSpKey.EGG_STATUS) != null) {
             _egg = Egg(this, _ivCharacter, this)
@@ -68,7 +66,6 @@ class MainActivity : AppCompatActivity(), Egg.OnBornListener, Monster.OnEvolutio
             _handler.post {
                 _egg.crack(PERIOD)
                 _egg.save()
-
                 if (KiUtil.random(5) == 0) _egg.jump()
             }
 
@@ -77,21 +74,44 @@ class MainActivity : AppCompatActivity(), Egg.OnBornListener, Monster.OnEvolutio
 
     override fun onBornListener(monsterTypeClass: KClass<out MonsterType>) {
         _timer.cancel()
-//        _monster = Monster(this, this, monsterTypeClass)
+
+        _timer = Timer()
+        _egg = null
+        _monster = Monster(this, _ivCharacter, this, this, monsterTypeClass)
+
+        _sp.remove(KiSpKey.EGG_STATUS)
+        _monster!!.save()
+
+        _timer.schedule(MonsterTimerTask(_monster!!), 0, PERIOD)
     }
 
     private class MonsterTimerTask(monster: Monster) : TimerTask() {
         private val _monster: Monster = monster
         private val _handler: Handler = Handler()
         override fun run() {
-            TODO("Not yet implemented")
             _handler.post {
+                _monster.grow(PERIOD)
+                _monster.save()
 
+                _monster.move()
             }
         }
     }
-    override fun onEvolutionListener(monsterType: MonsterType) {
-        TODO("Not yet implemented")
+
+    override fun onEvolveListener(monsterTypeClass: KClass<out MonsterType>) {
         _timer.cancel()
+
+        _timer = Timer()
+
+        _monster = Monster(this, _ivCharacter, this, this, monsterTypeClass)
+        _monster!!.save()
+
+        _timer.schedule(MonsterTimerTask(_monster!!), 0, PERIOD)
+
+
+    }
+
+    override fun onDieListener(eggTypeClass: KClass<out EggType>?) {
+
     }
 }
