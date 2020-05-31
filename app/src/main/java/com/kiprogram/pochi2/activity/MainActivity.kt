@@ -6,10 +6,13 @@ import android.content.Context
 import android.content.DialogInterface
 import android.os.Bundle
 import android.os.Handler
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import com.kiprogram.pochi2.R
 import com.kiprogram.pochi2.character.egg.Egg
 import com.kiprogram.pochi2.character.egg.EggType
@@ -36,6 +39,7 @@ class MainActivity : AppCompatActivity(), Egg.OnBornListener, Monster.OnEvolveLi
     }
 
     private lateinit var _sp: KiSharedPreferences
+    private lateinit var _toolbar: Toolbar
     private lateinit var _timer: Timer
 
     private var _isLooking: Boolean = true
@@ -51,6 +55,7 @@ class MainActivity : AppCompatActivity(), Egg.OnBornListener, Monster.OnEvolveLi
 
         // メンバ変数の初期化
         _sp = KiSharedPreferences(this)
+        _toolbar = findViewById(R.id.toolbar)
         _timer = Timer()
 
         // 通知チャネル設定
@@ -100,6 +105,22 @@ class MainActivity : AppCompatActivity(), Egg.OnBornListener, Monster.OnEvolveLi
         _timer.cancel()
         _egg?.save()
         _monster?.save()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+
+        menuInflater.inflate(R.menu.activity_main_top, menu)
+
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.menuStatus -> {
+                
+            }
+        }
+        return super.onOptionsItemSelected(item)
     }
 
     private class EggTimerTask(egg: Egg) : TimerTask() {
