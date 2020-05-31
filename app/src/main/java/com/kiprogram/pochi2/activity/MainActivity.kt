@@ -38,6 +38,8 @@ class MainActivity : AppCompatActivity(), Egg.OnBornListener, Monster.OnEvolveLi
     private lateinit var _sp: KiSharedPreferences
     private lateinit var _timer: Timer
 
+    private var _isLooking: Boolean = true
+
     private lateinit var _ivCharacter: ImageView
 
     private var _egg: Egg? = null
@@ -83,6 +85,23 @@ class MainActivity : AppCompatActivity(), Egg.OnBornListener, Monster.OnEvolveLi
 
     }
 
+    override fun onResume() {
+        super.onResume()
+        _isLooking = true
+    }
+
+    override fun onPause() {
+        super.onPause()
+        _isLooking = false
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        _timer.cancel()
+        _egg?.save()
+        _monster?.save()
+    }
+
     private class EggTimerTask(egg: Egg) : TimerTask() {
         private val _egg: Egg = egg
         private val _handler: Handler = Handler()
@@ -112,12 +131,12 @@ class MainActivity : AppCompatActivity(), Egg.OnBornListener, Monster.OnEvolveLi
         name(_monster!!)
     }
 
-    private class MonsterTimerTask(monster: Monster) : TimerTask() {
+    private inner class MonsterTimerTask(monster: Monster) : TimerTask() {
         private val _monster: Monster = monster
         private val _handler: Handler = Handler()
         override fun run() {
             _handler.post {
-                if (_monster.grow()) return@post
+                if (_monster.grow(_isLooking)) return@post
                 _monster.save()
 
                 _monster.move()

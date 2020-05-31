@@ -34,6 +34,8 @@ class Monster(context: Context, iv: ImageView, onDieListener: OnDieListener, onE
     var exercise: Long
         private set
     private var isBoring: Boolean
+    var friendly: Long
+        private set
 
     init {
         if (monsterTypeClass != null) {
@@ -46,6 +48,7 @@ class Monster(context: Context, iv: ImageView, onDieListener: OnDieListener, onE
             isHungry = true
             exercise = 0
             isBoring = true
+            friendly = 0
 
             val status = _sp.getAny<Status>(KiSpKey.MONSTER_STATUS)
             status?.let {
@@ -54,6 +57,7 @@ class Monster(context: Context, iv: ImageView, onDieListener: OnDieListener, onE
                 isHungry = it.isHungry
                 exercise = it.exercise
                 isBoring = it.isBoring
+                friendly = it.friendly
             }
 
         } else {
@@ -67,6 +71,7 @@ class Monster(context: Context, iv: ImageView, onDieListener: OnDieListener, onE
             isHungry = status.isHungry
             exercise = status.exercise
             isBoring = status.isBoring
+            friendly = status.friendly
         }
 
         _iv.setImageResource(monsterType.leftImageId)
@@ -75,11 +80,15 @@ class Monster(context: Context, iv: ImageView, onDieListener: OnDieListener, onE
         _iv.setOnClickListener(null)
     }
 
-    fun grow(period: Long = 1000): Boolean {
+    fun grow(isLooking: Boolean, period: Long = 1000): Boolean {
         elapsedTime += period
         damage += period
         hungry -= period
         exercise -= period
+
+        if (isLooking) {
+            friendly += period
+        }
 
         if (hungry <= 0) {
             damage += period
@@ -160,7 +169,8 @@ class Monster(context: Context, iv: ImageView, onDieListener: OnDieListener, onE
             hungry,
             isHungry,
             exercise,
-            isBoring
+            isBoring,
+            friendly
         )
         _sp.setAny(KiSpKey.MONSTER_STATUS, status)
         _sp.apply()
@@ -198,7 +208,8 @@ class Monster(context: Context, iv: ImageView, onDieListener: OnDieListener, onE
         val hungry: Long,
         val isHungry: Boolean,
         val exercise: Long,
-        val isBoring: Boolean
+        val isBoring: Boolean,
+        val friendly: Long
     )
 
     interface OnEvolveListener {
