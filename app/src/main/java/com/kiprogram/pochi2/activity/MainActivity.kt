@@ -26,7 +26,7 @@ import kotlin.reflect.KClass
 
 class MainActivity : AppCompatActivity(), Egg.OnBornListener, Monster.OnEvolveListener, Monster.OnDieListener {
     companion object {
-        const val PERIOD: Long = 10 // 1秒
+        const val PERIOD: Long = 1000 // 1秒
         const val NOTIFICATION_CHANNEL_ID: String = "pochi2"
 
         const val DEAD_FLAG: String = "1"

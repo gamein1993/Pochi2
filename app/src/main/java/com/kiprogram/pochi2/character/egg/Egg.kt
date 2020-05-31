@@ -35,7 +35,7 @@ class Egg(context: Context, iv: ImageView, onBornListener: OnBornListener, eggTy
         } else {
             // タイプ指定がない場合は保存済みデータを使用
             val status = _sp.getAny<Status>(KiSpKey.EGG_STATUS)!!
-            eggType = Class.forName(status!!.eggTypeClassName).kotlin.objectInstance as EggType
+            eggType = Class.forName(status.eggTypeClassName).kotlin.objectInstance as EggType
             elapsedTime = status.elapsedTime
             touchCount = status.touchCount
         }

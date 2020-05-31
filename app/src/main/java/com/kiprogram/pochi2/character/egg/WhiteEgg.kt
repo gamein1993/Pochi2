@@ -27,18 +27,11 @@ object WhiteEgg : EggType() {
     }
 
     override fun getBornMonster(touchCount: Int): KClass<out MonsterType> {
-        // 100回以上タッチしてたら猫確定
-        if (touchCount > 100) {
+        val random = KiUtil.random(100)
+        if (random < touchCount) {
             return BornMonster.KITTEN.monsterTypeClass
         }
-
-        // 90%で犬
-        val random = KiUtil.random(10)
-        if (random < 9) {
-            return BornMonster.PUPPY.monsterTypeClass
-        }
-
-        return BornMonster.KITTEN.monsterTypeClass
+        return BornMonster.PUPPY.monsterTypeClass
     }
 }
 
