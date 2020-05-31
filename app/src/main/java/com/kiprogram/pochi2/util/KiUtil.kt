@@ -1,6 +1,7 @@
 package com.kiprogram.pochi2.util
 
 import android.content.Context
+import android.widget.ImageView
 import java.util.*
 
 /**
@@ -18,11 +19,20 @@ object KiUtil {
     /**
      * [dp]をピクセルに変換します。
      */
-    fun convertDpToPixel(context: Context, dp: Float): Int {
+    fun convertDpToIntPixel(context: Context, dp: Float): Int {
         val resources = context.resources
         val metrics = resources.displayMetrics
         val px = dp * (metrics.densityDpi / 160f)
         return px.toInt()
+    }
+
+    /**
+     * [dp]をピクセルに変換します。
+     */
+    fun convertDpToFloatPixel(context: Context, dp: Float): Float {
+        val resources = context.resources
+        val metrics = resources.displayMetrics
+        return dp * (metrics.densityDpi / 160f)
     }
 
     /**
@@ -33,5 +43,9 @@ object KiUtil {
         val metrics = resources.displayMetrics
         val dp = px / (metrics.densityDpi / 160f)
         return dp.toInt()
+    }
+
+    fun putInHorizontalCenter(context: Context, iv: ImageView) {
+        iv.x = ((context.resources.displayMetrics.widthPixels - iv.layoutParams.width) / 2).toFloat()
     }
 }

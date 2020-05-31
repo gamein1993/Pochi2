@@ -2,6 +2,7 @@ package com.kiprogram.pochi2.character.monster
 
 import com.kiprogram.pochi2.R
 import com.kiprogram.pochi2.character.egg.EggType
+import com.kiprogram.pochi2.character.egg.WhiteEgg
 import kotlin.reflect.KClass
 
 object Puppy: MonsterType() {
@@ -21,7 +22,7 @@ object Puppy: MonsterType() {
     }
 
     override fun getReincarnateEgg(): KClass<out EggType>? {
-        return null
+        return WhiteEgg::class
     }
 
 }

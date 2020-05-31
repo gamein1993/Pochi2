@@ -18,7 +18,7 @@ class Egg(context: Context, iv: ImageView, onBornListener: OnBornListener, eggTy
     private val _sp: KiSharedPreferences = KiSharedPreferences(context)
     private val _iv: ImageView = iv
     private val _onBornListener: OnBornListener = onBornListener
-    private val _movingDistance: Int = KiUtil.convertDpToPixel(_context, 20F)
+    private val _movingDistance: Int = KiUtil.convertDpToIntPixel(_context, 20F)
 
     val eggType: EggType
     var elapsedTime: Long
@@ -29,15 +29,15 @@ class Egg(context: Context, iv: ImageView, onBornListener: OnBornListener, eggTy
     init {
         if (eggTypeClass != null) {
             // タイプ指定がある場合は新規作成
+            eggType = Class.forName(eggTypeClass.qualifiedName!!).kotlin.objectInstance as EggType
             elapsedTime = 0
             touchCount = 0
-            eggType = Class.forName(eggTypeClass.qualifiedName!!).kotlin.objectInstance as EggType
         } else {
             // タイプ指定がない場合は保存済みデータを使用
             val status = _sp.getAny<Status>(KiSpKey.EGG_STATUS)!!
+            eggType = Class.forName(status!!.eggTypeClassName).kotlin.objectInstance as EggType
             elapsedTime = status.elapsedTime
             touchCount = status.touchCount
-            eggType = Class.forName(status!!.eggTypeClassName).kotlin.objectInstance as EggType
         }
 
         setImageResource()
@@ -48,14 +48,16 @@ class Egg(context: Context, iv: ImageView, onBornListener: OnBornListener, eggTy
         }
     }
 
-    fun crack(period: Long) {
+    fun crack(period: Long = 1000): Boolean {
         elapsedTime += period
 
         setImageResource()
 
         if (elapsedTime > eggType.timeForEggToCrack) {
             _onBornListener.onBornListener(eggType.getBornMonster(touchCount))
+            return true
         }
+        return false
     }
 
     fun save() {
@@ -94,10 +96,9 @@ class Egg(context: Context, iv: ImageView, onBornListener: OnBornListener, eggTy
     }
 
     private fun setImageSize() {
-        val sizeX = KiUtil.convertDpToPixel(_context, eggType.sizeX)
-        val sizeY = KiUtil.convertDpToPixel(_context, eggType.sizeY)
-        _iv.layoutParams.width = sizeX
-        _iv.layoutParams.height = sizeY
+        _iv.layoutParams.width = KiUtil.convertDpToIntPixel(_context, eggType.sizeX)
+        _iv.layoutParams.height = KiUtil.convertDpToIntPixel(_context, eggType.sizeY)
+        KiUtil.putInHorizontalCenter(_context, _iv)
     }
 
     data class Status(

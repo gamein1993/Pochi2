@@ -1,8 +1,12 @@
 package com.kiprogram.pochi2.character.monster
 
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.os.Handler
 import android.widget.ImageView
+import androidx.core.app.NotificationCompat
 import com.kiprogram.pochi2.activity.MainActivity
 import com.kiprogram.pochi2.character.egg.EggType
 import com.kiprogram.pochi2.sp.KiSharedPreferences
@@ -16,7 +20,7 @@ class Monster(context: Context, iv: ImageView, onDieListener: OnDieListener, onE
     private val _iv: ImageView = iv
     private val _onEvolveListener: OnEvolveListener? = onEvolveListener
     private val _onDieListener: OnDieListener = onDieListener
-    private val _movingDistance: Int = KiUtil.convertDpToPixel(_context, 20F)
+    private val _movingDistance: Int = KiUtil.convertDpToIntPixel(_context, 20F)
 
     val monsterType: MonsterType
     var name: String
@@ -26,8 +30,10 @@ class Monster(context: Context, iv: ImageView, onDieListener: OnDieListener, onE
         private set
     var hungry: Long
         private set
+    private var isHungry: Boolean
     var exercise: Long
         private set
+    private var isBoring: Boolean
 
     init {
         if (monsterTypeClass != null) {
@@ -37,7 +43,18 @@ class Monster(context: Context, iv: ImageView, onDieListener: OnDieListener, onE
             elapsedTime = 0
             damage = 0
             hungry = 0
+            isHungry = true
             exercise = 0
+            isBoring = true
+
+            val status = _sp.getAny<Status>(KiSpKey.MONSTER_STATUS)
+            status?.let {
+                name = it.name
+                hungry = it.hungry
+                isHungry = it.isHungry
+                exercise = it.exercise
+                isBoring = it.isBoring
+            }
 
         } else {
             // タイプ指定がない場合は保存済みデータを使用
@@ -47,7 +64,9 @@ class Monster(context: Context, iv: ImageView, onDieListener: OnDieListener, onE
             elapsedTime = status.elapsedTime
             damage = status.damage
             hungry = status.hungry
+            isHungry = status.isHungry
             exercise = status.exercise
+            isBoring = status.isBoring
         }
 
         _iv.setImageResource(monsterType.leftImageId)
@@ -56,21 +75,44 @@ class Monster(context: Context, iv: ImageView, onDieListener: OnDieListener, onE
         _iv.setOnClickListener(null)
     }
 
-    fun grow(period: Long) {
+    fun grow(period: Long = 1000): Boolean {
         elapsedTime += period
         damage += period
         hungry -= period
         exercise -= period
 
-        if (elapsedTime > monsterType.timeForMonsterToEvolve) {
-            _onEvolveListener?.onEvolveListener(monsterType.getEvolveMonster()!!)
-            return
+        if (hungry <= 0) {
+            damage += period
+            if (!isHungry) {
+                isHungry = true
+                makeSound(MainActivity.NOTIFY_ID_MONSTER_HUNGRY, "お腹すいた", Importance.ALERT)
+            } else {
+                if (KiUtil.random(180) == 0) makeSound(MainActivity.NOTIFY_ID_MONSTER_HUNGRY, "お腹すいた", Importance.ALERT)
+            }
+        }
+
+        if (exercise <= 0) {
+            damage += period
+
+            if (!isBoring) {
+                isBoring = true
+                makeSound(MainActivity.NOTIFY_ID_MONSTER_BORING, "遊んでほしい", Importance.ALERT)
+            } else {
+                if (KiUtil.random(180) == 0) makeSound(MainActivity.NOTIFY_ID_MONSTER_BORING, "遊んでほしい", Importance.ALERT)
+            }
         }
 
         if (damage > monsterType.timeToDie) {
-            _onDieListener.onDieListener()
-            return
+            _onDieListener.onDieListener(monsterType.getReincarnateEgg())
+            return true
         }
+
+        if (elapsedTime > monsterType.timeForMonsterToEvolve) {
+            _onEvolveListener?.onEvolveListener(monsterType.getEvolveMonster()!!)
+            return true
+        }
+
+        return false
     }
 
     fun move() {
@@ -80,6 +122,35 @@ class Monster(context: Context, iv: ImageView, onDieListener: OnDieListener, onE
         if (random == 2) jump()
     }
 
+    fun right() {
+
+        _iv.setImageResource(monsterType.rightImageId)
+
+        val maxWidth = (_context.resources.displayMetrics.widthPixels - KiUtil.convertDpToIntPixel(_context, monsterType.sizeX)).toFloat()
+        if (_iv.x >= maxWidth) {
+            _iv.x = maxWidth
+        } else {
+            _iv.x += _movingDistance
+        }
+    }
+
+    fun left() {
+        _iv.setImageResource(monsterType.leftImageId)
+
+        if (_iv.x <= 0F) {
+            _iv.x = 0F
+        } else {
+            _iv.x -= _movingDistance
+        }
+    }
+
+    fun jump() {
+        _iv.y -= _movingDistance
+        Handler().postDelayed(Runnable {
+            _iv.y += _movingDistance
+        }, MainActivity.PERIOD)
+    }
+
     fun save() {
         val status = Status(
             monsterType::class.qualifiedName!!,
@@ -87,34 +158,36 @@ class Monster(context: Context, iv: ImageView, onDieListener: OnDieListener, onE
             elapsedTime,
             damage,
             hungry,
-            exercise
+            isHungry,
+            exercise,
+            isBoring
         )
         _sp.setAny(KiSpKey.MONSTER_STATUS, status)
         _sp.apply()
     }
 
     private fun setImageSize() {
-        val sizeX = KiUtil.convertDpToPixel(_context, monsterType.sizeX)
-        val sizeY = KiUtil.convertDpToPixel(_context, monsterType.sizeY)
-        _iv.layoutParams.width = sizeX
-        _iv.layoutParams.height = sizeY
+        _iv.layoutParams.width = KiUtil.convertDpToIntPixel(_context, monsterType.sizeX)
+        _iv.layoutParams.height = KiUtil.convertDpToIntPixel(_context, monsterType.sizeY)
     }
 
-    private fun right() {
-        _iv.setImageResource(monsterType.rightImageId)
-        _iv.x += _movingDistance
+    private enum class Importance(val level: Int){
+        INFO(android.R.drawable.ic_dialog_info),
+        ALERT(android.R.drawable.ic_dialog_alert)
     }
+    private fun makeSound(id: Int, feeling: String, importance: Importance) {
+        val builder = NotificationCompat.Builder(_context, MainActivity.NOTIFICATION_CHANNEL_ID)
+        builder.setContentTitle(name)
+        builder.setContentText(feeling)
+        builder.setSmallIcon(importance.level)
 
-    private fun left() {
-        _iv.setImageResource(monsterType.leftImageId)
-        _iv.x -= _movingDistance
-    }
+        val intent = Intent(_context, MainActivity::class.java)
+        builder.setContentIntent(PendingIntent.getActivity(_context, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT))
+        builder.setAutoCancel(true)
 
-    private fun jump() {
-        _iv.y -= _movingDistance
-        Handler().postDelayed(Runnable {
-            _iv.y += _movingDistance
-        }, MainActivity.PERIOD)
+        val notification = builder.build()
+        val notificationManager = _context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(id, notification)
     }
 
     data class Status(
@@ -123,7 +196,9 @@ class Monster(context: Context, iv: ImageView, onDieListener: OnDieListener, onE
         val elapsedTime: Long,
         val damage: Long,
         val hungry: Long,
-        val exercise: Long
+        val isHungry: Boolean,
+        val exercise: Long,
+        val isBoring: Boolean
     )
 
     interface OnEvolveListener {
