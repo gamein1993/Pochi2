@@ -98,17 +98,18 @@ class Monster(context: Context, iv: ImageView, onDieListener: OnDieListener, onE
             } else {
                 if (KiUtil.random(180) == 0) makeSound(MainActivity.NOTIFY_ID_MONSTER_HUNGRY, "お腹すいた", Importance.ALERT)
             }
+            hungry = 0
         }
 
         if (exercise <= 0) {
             damage += period
-
             if (!isBoring) {
                 isBoring = true
                 makeSound(MainActivity.NOTIFY_ID_MONSTER_BORING, "遊んでほしい", Importance.ALERT)
             } else {
                 if (KiUtil.random(180) == 0) makeSound(MainActivity.NOTIFY_ID_MONSTER_BORING, "遊んでほしい", Importance.ALERT)
             }
+            exercise = 0
         }
 
         if (damage > monsterType.timeToDie) {

@@ -4,6 +4,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.DialogInterface
+import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.view.Menu
@@ -115,11 +116,19 @@ class MainActivity : AppCompatActivity(), Egg.OnBornListener, Monster.OnEvolveLi
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.menuStatus -> {
-                
+        _monster?.let {
+            when (item.itemId) {
+                R.id.menuStatus -> {
+                    val intent = Intent(this, StatusActivity::class.java)
+                    intent.putExtra(StatusActivity.EXTRA_FIELD_MONSTER_TYPE, it.monsterType)
+                    intent.putExtra(StatusActivity.EXTRA_FIELD_NAME, it.name)
+                    intent.putExtra(StatusActivity.EXTRA_FIELD_HUNGRY, it.hungry)
+                    intent.putExtra(StatusActivity.EXTRA_FIELD_EXERCISE, it.exercise)
+                    startActivity(intent)
+                }
             }
         }
+
         return super.onOptionsItemSelected(item)
     }
 

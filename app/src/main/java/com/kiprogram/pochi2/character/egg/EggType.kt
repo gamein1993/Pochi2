@@ -1,9 +1,10 @@
 package com.kiprogram.pochi2.character.egg
 
 import com.kiprogram.pochi2.character.monster.MonsterType
+import java.io.Serializable
 import kotlin.reflect.KClass
 
-abstract class EggType {
+abstract class EggType : Serializable {
     abstract val name: String
     abstract val imageId01: Int
     abstract val imageId02: Int
