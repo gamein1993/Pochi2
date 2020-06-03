@@ -10,10 +10,10 @@ import com.kiprogram.pochi2.util.KiUtil
 
 class StatusActivity : AppCompatActivity() {
     companion object {
-        val EXTRA_FIELD_MONSTER_TYPE: String = "monster_type"
-        val EXTRA_FIELD_NAME: String = "name"
-        val EXTRA_FIELD_HUNGRY: String = "hungry"
-        val EXTRA_FIELD_EXERCISE: String = "exercise"
+        const val EXTRA_FIELD_MONSTER_TYPE: String = "monster_type"
+        const val EXTRA_FIELD_NAME: String = "name"
+        const val EXTRA_FIELD_HUNGRY: String = "hungry"
+        const val EXTRA_FIELD_EXERCISE: String = "exercise"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
